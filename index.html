@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Passport Stamp Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="topnav">
+  <div class="brand">🛂 <span>Passport Tracker</span></div>
+  <div class="spacer"></div>
+  <button class="nav-btn" onclick="importData()">⬆ Import</button>
+  <button class="nav-btn" onclick="exportData()">⬇ Export</button>
+  <button class="nav-btn primary" onclick="openAddEntry()">+ Add Trip</button>
+</nav>
+
+<!-- ── View Tabs ── -->
+<div class="view-tabs">
+  <div class="view-tab active" data-view="timeline"  onclick="switchView('timeline')">Timeline</div>
+  <div class="view-tab"        data-view="countries" onclick="switchView('countries')">Countries</div>
+  <div class="view-tab"        data-view="dashboard" onclick="switchView('dashboard')">Dashboard</div>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+  <div class="traveler-tabs-wrap" id="traveler-tabs"></div>
+  <div id="main-content"></div>
+</div>
+
+<!-- ══════════════ Travelers Modal ══════════════ -->
+<div class="modal-overlay" id="travelers-modal">
+  <div class="modal">
+    <h2>Manage Travelers</h2>
+
+    <div class="section-label">Current Travelers</div>
+    <div class="traveler-modal-list" id="travelers-list"></div>
+
+    <hr class="divider" />
+
+    <div class="section-label">Add New Traveler</div>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="new-traveler-name" placeholder="Full name" />
+      </div>
+      <div class="form-row">
+        <label>Relation</label>
+        <input type="text" id="new-traveler-relation" placeholder="e.g. Son, Daughter, Mom" />
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Color</label>
+      <div class="color-swatches" id="color-swatches"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('travelers-modal')">Done</button>
+      <button class="btn btn-primary" onclick="addTraveler()">Add Traveler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="app.js"></script>
+<script>
+  function switchView(v) { activeView = v; render(); }
+</script>
+</body>
+</html>
