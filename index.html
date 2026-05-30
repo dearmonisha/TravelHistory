@@ -14,6 +14,7 @@
   <div class="spacer"></div>
   <button class="nav-btn" onclick="importData()">⬆ Import</button>
   <button class="nav-btn" onclick="exportData()">⬇ Export</button>
+  <div id="gh-status-btn" class="nav-btn gh-disconnected" onclick="openGithubModal()" title="Set up GitHub sync">☁ Sync</div>
   <button class="nav-btn primary" onclick="openAddEntry()">+ Add Trip</button>
 </nav>
 
@@ -59,6 +60,35 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('travelers-modal')">Done</button>
       <button class="btn btn-primary" onclick="addTraveler()">Add Traveler</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ GitHub Sync Modal ══════════════ -->
+<div class="modal-overlay" id="github-modal">
+  <div class="modal">
+    <h2>☁ GitHub Sync Setup</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">
+      Your data will be saved to a file in your GitHub repo and loaded automatically on every device. You only need to do this once per browser.
+    </p>
+    <div class="form-row" style="margin-bottom:14px">
+      <label>GitHub Repo <span style="font-size:11px;color:var(--muted)">(owner/repo)</span></label>
+      <input type="text" id="gh-repo" placeholder="e.g. dearmonisha/TravelHistory" />
+    </div>
+    <div class="form-row" style="margin-bottom:14px">
+      <label>File name in repo</label>
+      <input type="text" id="gh-file" placeholder="passport_data.json" value="passport_data.json" />
+    </div>
+    <div class="form-row" style="margin-bottom:6px">
+      <label>Personal Access Token</label>
+      <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" />
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:18px">
+      Token needs <strong>repo</strong> scope. Generate at GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic).
+    </p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('github-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGithubConfig()">Connect &amp; Sync</button>
     </div>
   </div>
 </div>

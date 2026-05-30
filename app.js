@@ -110,6 +110,106 @@ function initials(name) {
   return name.split(" ").map(p => p[0]).join("").slice(0,2).toUpperCase();
 }
 
+// ── GitHub Sync ───────────────────────────────
+const GH_TOKEN_KEY = "passport_gh_token";
+const GH_REPO_KEY  = "passport_gh_repo";
+const GH_FILE_KEY  = "passport_gh_file";
+
+let ghToken   = localStorage.getItem(GH_TOKEN_KEY) || null;
+let ghRepo    = localStorage.getItem(GH_REPO_KEY)  || "";
+let ghFile    = localStorage.getItem(GH_FILE_KEY)  || "passport_data.json";
+let ghFileSha = null; // needed by GitHub API for updates
+
+function ghHeaders() {
+  return { Authorization: `token ${ghToken}`, Accept: "application/vnd.github.v3+json", "Content-Type": "application/json" };
+}
+
+async function loadFromGitHub() {
+  if (!ghToken || !ghRepo) return null;
+  try {
+    const res = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${ghFile}`, { headers: ghHeaders() });
+    if (!res.ok) return null;
+    const json = await res.json();
+    ghFileSha = json.sha;
+    return JSON.parse(atob(json.content.replace(/\n/g, "")));
+  } catch(e) { return null; }
+}
+
+async function saveToGitHub(dataObj) {
+  if (!ghToken || !ghRepo) return;
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObj, null, 2))));
+    const body = { message: "Update passport data", content, ...(ghFileSha ? { sha: ghFileSha } : {}) };
+    const res = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${ghFile}`, {
+      method: "PUT", headers: ghHeaders(), body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      ghFileSha = json.content.sha;
+      updateGhStatusBtn(true);
+    }
+  } catch(e) {}
+}
+
+function updateGhStatusBtn(synced) {
+  const btn = document.getElementById("gh-status-btn");
+  if (!btn) return;
+  if (!ghToken || !ghRepo) {
+    btn.textContent = "☁ Sync";
+    btn.className = "nav-btn gh-disconnected";
+    btn.title = "Set up GitHub sync";
+  } else if (synced) {
+    btn.textContent = "☁ Synced";
+    btn.className = "nav-btn gh-connected";
+    btn.title = `Synced to ${ghRepo}/${ghFile}`;
+  } else {
+    btn.textContent = "☁ Syncing…";
+    btn.className = "nav-btn gh-syncing";
+  }
+}
+
+function openGithubModal() {
+  document.getElementById("gh-repo").value  = ghRepo;
+  document.getElementById("gh-file").value  = ghFile || "passport_data.json";
+  document.getElementById("gh-token").value = ghToken || "";
+  openModal("github-modal");
+}
+
+async function saveGithubConfig() {
+  const repo  = document.getElementById("gh-repo").value.trim();
+  const file  = document.getElementById("gh-file").value.trim() || "passport_data.json";
+  const token = document.getElementById("gh-token").value.trim();
+  if (!repo || !token) { toast("Enter both repo and token"); return; }
+
+  ghRepo  = repo;
+  ghFile  = file;
+  ghToken = token;
+  localStorage.setItem(GH_REPO_KEY,  ghRepo);
+  localStorage.setItem(GH_FILE_KEY,  ghFile);
+  localStorage.setItem(GH_TOKEN_KEY, ghToken);
+  ghFileSha = null;
+
+  closeModal("github-modal");
+  updateGhStatusBtn(false);
+  toast("Connecting to GitHub…");
+
+  // Try to load existing data from GitHub first
+  const remote = await loadFromGitHub();
+  if (remote && remote.travelers) {
+    if (confirm(`Found existing data on GitHub (${remote.travelers.length} travelers, ${remote.entries.length} entries). Load it? (Cancel to push your current local data instead)`)) {
+      data = remote;
+      saveData(data);
+      render();
+      toast("Data loaded from GitHub ✓");
+      updateGhStatusBtn(true);
+      return;
+    }
+  }
+  // Push local data to GitHub
+  await saveToGitHub(data);
+  toast("Connected & data saved to GitHub ✓");
+}
+
 // ── Storage ───────────────────────────────────
 const STORAGE_KEY = "passport_tracker_v1";
 
@@ -120,8 +220,12 @@ function loadData() {
   } catch(e) {}
   return defaultData();
 }
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function saveData(dataObj) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dataObj));
+  if (ghToken && ghRepo) {
+    updateGhStatusBtn(false);
+    saveToGitHub(dataObj);
+  }
 }
 function defaultData() {
   return {
@@ -901,7 +1005,21 @@ function toast(msg) {
 }
 
 // ── Init ──────────────────────────────────────
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setupCountryDatalist();
+  updateGhStatusBtn(false);
   render();
+
+  // If GitHub is configured, load latest data from it on startup
+  if (ghToken && ghRepo) {
+    const remote = await loadFromGitHub();
+    if (remote && remote.travelers) {
+      data = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      render();
+      updateGhStatusBtn(true);
+    } else {
+      updateGhStatusBtn(true); // still connected, just no remote file yet
+    }
+  }
 });

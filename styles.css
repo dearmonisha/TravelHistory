@@ -71,6 +71,9 @@ body {
   color: #fff;
 }
 .topnav .nav-btn.primary:hover { background: #4338ca; }
+.topnav .gh-disconnected { color: var(--muted); border-style: dashed; }
+.topnav .gh-connected    { color: var(--green); border-color: var(--green); background: var(--green-bg); }
+.topnav .gh-syncing      { color: var(--yellow); border-color: var(--yellow); }
 
 /* ── View Switcher ── */
 .view-tabs {
