@@ -13,6 +13,13 @@
       "relation": "Husband",
       "color": "#0891b2",
       "presence_start_date": "2021-08-18"
+    },
+    {
+      "id": "mqe21c1x2wb608hkexn",
+      "name": "Shashi Batta",
+      "relation": "Mom",
+      "color": "#db2777",
+      "presence_start_date": ""
     }
   ],
   "entries": [
